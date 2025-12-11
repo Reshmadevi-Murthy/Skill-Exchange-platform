@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  name        String
+  email       String    @unique
+  password    String
+  mobile      String
+  age         Int
+  profession  String
+  skills      Skill[]
+  wants       Want[]
+  requestsOut Request[] @relation("requestsOut")
+  requestsIn  Request[] @relation("requestsIn")
+  permissions Permission[]
+}
+
+model Skill {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String
+  videoPath   String
+  ownerId     Int
+  owner       User      @relation(fields: [ownerId], references: [id])
+  requests    Request[]
+  permissions Permission[]
+  createdAt   DateTime  @default(now())
+}
+
+model Want {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  ownerId     Int
+  owner       User     @relation(fields: [ownerId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Request {
+  id        Int     @id @default(autoincrement())
+  fromId    Int
+  toId      Int
+  skillId   Int
+  status    String  @default("pending")
+  createdAt DateTime @default(now())
+
+  from   User  @relation("requestsOut", fields: [fromId], references: [id])
+  to     User  @relation("requestsIn", fields: [toId], references: [id])
+  skill  Skill @relation(fields: [skillId], references: [id])
+}
+
+model Permission {
+  id      Int   @id @default(autoincrement())
+  userId  Int
+  videoId Int
+  user    User  @relation(fields: [userId], references: [id])
+  video   Skill @relation(fields: [videoId], references: [id])
+
+  @@unique([userId, videoId])
+}
